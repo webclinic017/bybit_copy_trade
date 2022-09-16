@@ -77,38 +77,38 @@ class Bybit_copy_trade(Bybit_instruments_info):
         self.__logger.info(f"\n{pformat(opened_trades_created_timestamp_list)}")
         self.__logger.info("*" * 100)
         while True:
-            # try:
-            # reformat the list to (createdAtE3 + symbol + side) string
-            current_trade_list = [
-                "_".join([current_trade["createdAtE3"], current_trade["symbol"], current_trade["side"]])
-                for current_trade in self.get_current_trades(leaderMark=leaderMark)]
-            # serach for the trades which are new in current_trade_list and not in opened_trades_created_timestamp_list
-            new_trade_list = set(opened_trades_created_timestamp_list).difference(current_trade_list)
-            if new_trade_list:
-                # if new trades open, replace the original opened_trades_created_timestamp_list to opened trade list
-                opened_trades_created_timestamp_list = current_trade_list
-                for new_trade in new_trade_list:
-                    symbol = new_trade.split("_")[1]
-                    side = new_trade.split("_")[2]
-                    if self.place_market_order(symbol=symbol, side=side, reduce_only=False):
-                        # Add new transaction key to followed_trades_created_timestamp_list
-                        followed_trades_created_timestamp_list.append(new_trade)
-                        self.__logger.info(f"{new_trade = }")
-            # search for the trades which opened in followed_trades_created_timestamp_list and disappear in current_list
-            # means the trades are closed by the PT
-            closed_trade_list = set(followed_trades_created_timestamp_list).difference(current_trade_list)
-            if closed_trade_list:
-                for closed_trade in closed_trade_list:
-                    symbol = closed_trade.split("_")[1]
-                    side = closed_trade.split("_")[2]
-                    if self.place_market_order(symbol=symbol, side=side, reduce_only=True):
-                        # Remove the transaction key to followed_trades_created_timestamp_list
-                        followed_trades_created_timestamp_list.remove(closed_trade)
-                        self.__logger.info(f"{closed_trade = }")
+            try:
+                # reformat the list to (createdAtE3 + symbol + side) string
+                current_trade_list = [
+                    "_".join([current_trade["createdAtE3"], current_trade["symbol"], current_trade["side"]])
+                    for current_trade in self.get_current_trades(leaderMark=leaderMark)]
+                # serach trades which are new in current_trade_list and not in opened_trades_created_timestamp_list
+                new_trade_list = set(opened_trades_created_timestamp_list).difference(current_trade_list)
+                if new_trade_list:
+                    # if new trades open, replace the original opened_trades_created_timestamp_list to opened trade list
+                    opened_trades_created_timestamp_list = current_trade_list
+                    for new_trade in new_trade_list:
+                        symbol = new_trade.split("_")[1]
+                        side = new_trade.split("_")[2]
+                        if self.place_market_order(symbol=symbol, side=side, reduce_only=False):
+                            # Add new transaction key to followed_trades_created_timestamp_list
+                            followed_trades_created_timestamp_list.append(new_trade)
+                            self.__logger.info(f"{new_trade = }")
+                # search trades which opened in followed_trades_created_timestamp_list and disappear in current_list
+                # means the trades are closed by the PT
+                closed_trade_list = set(followed_trades_created_timestamp_list).difference(current_trade_list)
+                if closed_trade_list:
+                    for closed_trade in closed_trade_list:
+                        symbol = closed_trade.split("_")[1]
+                        side = closed_trade.split("_")[2]
+                        if self.place_market_order(symbol=symbol, side=side, reduce_only=True):
+                            # Remove the transaction key to followed_trades_created_timestamp_list
+                            followed_trades_created_timestamp_list.remove(closed_trade)
+                            self.__logger.info(f"{closed_trade = }")
 
-            sleep(uniform(1, 10))
-            # except BaseException as e:
-            #     print(datetime.now(), e)
+                sleep(uniform(1, 10))
+            except BaseException as e:
+                self.__logger.error(e)
 
 
 if __name__ == "__main__":
